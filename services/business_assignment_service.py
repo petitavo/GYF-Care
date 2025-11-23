@@ -1,7 +1,6 @@
 # services/business_assignment_service.py
 
-from typing import Optional, Dict, Any, List, Tuple
-from math import inf
+from typing import Dict, Any, List, Tuple
 import time
 
 from db import db
@@ -24,7 +23,6 @@ from algorithms.edmonds_karp import edmonds_karp
 
 # Distancia geográfica
 from utils.geo_utils import distancia_km
-
 
 
 class BusinessAssignmentService:
@@ -164,9 +162,26 @@ class BusinessAssignmentService:
 
         # Helper para encontrar la asignación concreta del paciente
         def find_assignment(assignments, patient_id: str):
+            """
+            Busca la asignación del paciente mirando varios nombres de clave posibles.
+            """
+            if not assignments:
+                return None
+
+            candidate_keys = [
+                "patient",
+                "patient_id",
+                "patient_code",
+                "id_paciente",
+                "ID_Paciente",
+                "id",
+            ]
+
             for a in assignments:
-                if a.get("patient") == patient_id or a.get("patient_id") == patient_id:
-                    return a
+                for k in candidate_keys:
+                    if k in a and str(a[k]) == str(patient_id):
+                        return a
+
             return None
 
         # ---- 3.1 Greedy
@@ -374,7 +389,32 @@ class BusinessAssignmentService:
                 })
                 continue
 
-            hosp_id = asg.get("hospital") or asg.get("hospital_id")
+            # Detectar hospital_id con varios nombres posibles
+            hospital_keys = [
+                "hospital",
+                "hospital_id",
+                "hospital_code",
+                "id_hospital",
+                "ID_Hospital",
+            ]
+            hosp_id = None
+            for k in hospital_keys:
+                if k in asg:
+                    hosp_id = asg[k]
+                    break
+
+            if hosp_id is None:
+                assignment_algos_final.append({
+                    "name": ar["name"],
+                    "category": ar["category"],
+                    "big_o": ar["big_o"],
+                    "time_ms": ar["time_ms"],
+                    "hospital": None,
+                    "distance_geo_km": None,
+                    "paths": None,
+                })
+                continue
+
             hosp = hospitals_by_id.get(hosp_id)
 
             if not hosp:

@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask
 from flask_cors import CORS
 from flasgger import Swagger
@@ -11,7 +10,9 @@ from routes import (
     network_bp,
     compare_bp,
     business_bp,
+    graph_bp,   # 👈 importante
 )
+
 
 def create_app():
     app = Flask(__name__)
@@ -23,7 +24,7 @@ def create_app():
     # DB
     db.init_app(app)
 
-    # Swagger configuración básica
+    # ---------- Swagger ----------
     swagger_template = {
         "swagger": "2.0",
         "info": {
@@ -40,28 +41,30 @@ def create_app():
             {
                 "endpoint": "apispec_1",
                 "route": "/apispec_1.json",
-                "rule_filter": lambda rule: True,  # incluir todas las rutas
-                "model_filter": lambda tag: True,  # incluir todos los modelos
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
             }
         ],
         "static_url_path": "/flasgger_static",
         "swagger_ui": True,
-        "specs_route": "/apidocs/"  # aquí estará la UI
+        "specs_route": "/apidocs/"
     }
 
     Swagger(app, template=swagger_template, config=swagger_config)
+    # -----------------------------
 
     # Crear tablas
     with app.app_context():
-        from models import Patient, Hospital  # asegura que los modelos se registren
+        from models import Patient, Hospital
         db.create_all()
 
-    # Register blueprints
+    # Registrar blueprints
     app.register_blueprint(path_bp)
     app.register_blueprint(assignment_bp)
     app.register_blueprint(network_bp)
     app.register_blueprint(compare_bp)
     app.register_blueprint(business_bp)
+    app.register_blueprint(graph_bp)  # 👈 registra el nuevo
 
     return app
 

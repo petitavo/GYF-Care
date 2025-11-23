@@ -1,0 +1,10 @@
+Flask
+Flask-Cors
+Flask-SQLAlchemy
+python-dotenv
+pandas
+networkx
+haversine
+scipy
+numpy
+mysql-connector-python
