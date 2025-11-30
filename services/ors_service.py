@@ -38,13 +38,13 @@ class ORSService:
 
         # Log de inicialización
         print("=" * 60)
-        print("🔧 ORS SERVICE INITIALIZED")
+        print(" ORS SERVICE INITIALIZED")
         print("=" * 60)
-        print(f"📍 Base URL: {self.base_url}")
-        print(f"🔑 API Key: {self.api_key[:20]}...{self.api_key[-10:]}")
-        print(f"⏱️  Timeout: {self.timeout}s")
-        print(f"🔄 Max Retries: {self.max_retries}")
-        print(f"💾 Cache: {'Enabled' if ENABLE_CACHE else 'Disabled'}")
+        print(f" Base URL: {self.base_url}")
+        print(f" API Key: {self.api_key[:20]}...{self.api_key[-10:]}")
+        print(f"⏱  Timeout: {self.timeout}s")
+        print(f" Max Retries: {self.max_retries}")
+        print(f" Cache: {'Enabled' if ENABLE_CACHE else 'Disabled'}")
         print("=" * 60)
 
     def _get_cache_path(self, start_lat: float, start_lon: float, 
@@ -60,10 +60,10 @@ class ORSService:
         try:
             with open(cache_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                print(f"✅ Cache HIT: {cache_path.name}")
+                print(f" Cache HIT: {cache_path.name}")
                 return data
         except Exception as e:
-            print(f"⚠️ Cache read error: {e}")
+            print(f" Cache read error: {e}")
             return None
 
     def _save_to_cache(self, cache_path: Path, data: Dict) -> None:
@@ -73,9 +73,9 @@ class ORSService:
         try:
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(data, f)
-            print(f"💾 Saved to cache: {cache_path.name}")
+            print(f" Saved to cache: {cache_path.name}")
         except Exception as e:
-            print(f"⚠️ Cache write error: {e}")
+            print(f" Cache write error: {e}")
 
     def get_route(self, start_lat: float, start_lon: float,
                   end_lat: float, end_lon: float) -> Dict:
@@ -110,15 +110,15 @@ class ORSService:
             "radiuses": [1000, 1000],
         }
 
-        print(f"\n🚀 ORS REQUEST")
-        print(f"   📍 From: ({start_lat:.4f}, {start_lon:.4f})")
-        print(f"   📍 To:   ({end_lat:.4f}, {end_lon:.4f})")
-        print(f"   🔗 Endpoint: {self.endpoint}")
+        print(f"\n ORS REQUEST")
+        print(f"    From: ({start_lat:.4f}, {start_lon:.4f})")
+        print(f"    To:   ({end_lat:.4f}, {end_lon:.4f})")
+        print(f"    Endpoint: {self.endpoint}")
 
         # 3. Intentar con reintentos
         for attempt in range(self.max_retries):
             try:
-                print(f"   🔄 Attempt {attempt + 1}/{self.max_retries}...")
+                print(f"    Attempt {attempt + 1}/{self.max_retries}...")
                 
                 response = requests.post(
                     self.endpoint,
@@ -127,7 +127,7 @@ class ORSService:
                     timeout=self.timeout,
                 )
 
-                print(f"   📡 Status: {response.status_code}")
+                print(f"    Status: {response.status_code}")
 
                 # Éxito
                 if response.status_code == 200:
@@ -140,7 +140,7 @@ class ORSService:
                         segments = feature["properties"].get("segments", [])
                         
                         if not segments:
-                            print(f"   ❌ No segments in response")
+                            print(f"    No segments in response")
                             continue
 
                         props = segments[0]
@@ -154,19 +154,19 @@ class ORSService:
                             "geometry": geometry,
                         }
 
-                        print(f"   ✅ SUCCESS! Distance: {distance_km:.2f} km")
+                        print(f"    SUCCESS! Distance: {distance_km:.2f} km")
                         self._save_to_cache(cache_path, result)
                         return result
 
                 # Rate limit
                 elif response.status_code == 429:
-                    print(f"   ⏳ Rate limited, waiting...")
+                    print(f"    Rate limited, waiting...")
                     if attempt < self.max_retries - 1:
                         time.sleep(2 ** attempt)
                         continue
                     else:
                         error_msg = "Rate limit exceeded"
-                        print(f"   ❌ {error_msg}")
+                        print(f"    {error_msg}")
                         return {
                             "success": False,
                             "error": error_msg,
@@ -177,7 +177,7 @@ class ORSService:
                 # Otros errores
                 else:
                     error_msg = f"API error {response.status_code}: {response.text[:200]}"
-                    print(f"   ❌ {error_msg}")
+                    print(f"    {error_msg}")
                     return {
                         "success": False,
                         "error": error_msg,
@@ -186,7 +186,7 @@ class ORSService:
                     }
 
             except requests.Timeout:
-                print(f"   ⏱️ Timeout")
+                print(f"    Timeout")
                 if attempt < self.max_retries - 1:
                     continue
                 return {
@@ -197,7 +197,7 @@ class ORSService:
                 }
 
             except Exception as e:
-                print(f"   💥 Exception: {str(e)}")
+                print(f"    Exception: {str(e)}")
                 if attempt < self.max_retries - 1:
                     continue
                 return {
@@ -208,7 +208,7 @@ class ORSService:
                 }
 
         # Si llegamos aquí, todos los intentos fallaron
-        print(f"   ❌ Max retries exceeded")
+        print(f"    Max retries exceeded")
         return {
             "success": False,
             "error": "Max retries exceeded",
